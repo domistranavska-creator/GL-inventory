@@ -1,27 +1,39 @@
-/* Cache-first SW for GL Inventory PWA */
-const CACHE = 'gl-inventory-pwa-v1';
+// GL Inventory – PWA SW v5
+const CACHE = 'gl-inventory-pwa-v5';
+
 const ASSETS = [
   './',
   './index.html',
-  './manifest.webmanifest',
-  './icons/icon-192.png',
-  './icons/icon-512.png',
-  './icons/maskable-512.png'
+  './manifest.webmanifest?v=5',
+  './icons/icon-72.png?v=5',
+  './icons/icon-96.png?v=5',
+  './icons/icon-128.png?v=5',
+  './icons/icon-144.png?v=5',
+  './icons/icon-152.png?v=5',
+  './icons/icon-192.png?v=5',
+  './icons/icon-384.png?v=5',
+  './icons/icon-512.png?v=5',
+  './icons/maskable-512.png?v=5'
 ];
 
 self.addEventListener('install', (event) => {
+  self.skipWaiting();
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(ASSETS)));
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
+    Promise.all([
+      caches.keys().then(keys =>
+        Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
+      ),
+      self.clients.claim()
+    ])
   );
 });
 
 self.addEventListener('fetch', (event) => {
-  const req = event.request;
   event.respondWith(
-    caches.match(req).then(cached => cached || fetch(req))
+    caches.match(event.request, { ignoreSearch: true }).then(cached => cached || fetch(event.request))
   );
 });
